@@ -22,6 +22,11 @@ public class ContentDto
         GenreList = genreList;
     }
 
+    public ContentDto(IEnumerable<string> genreList)
+    {
+        GenreList = genreList ?? Enumerable.Empty<string>();
+    }
+
     public string? Title { get; set; }
     public string? SubTitle { get; set; }
     public string? Description { get; set; }

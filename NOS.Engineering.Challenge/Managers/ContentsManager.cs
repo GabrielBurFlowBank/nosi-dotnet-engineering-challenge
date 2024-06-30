@@ -36,4 +36,35 @@ public class ContentsManager : IContentsManager
     {
         return _database.Delete(id);
     }
+
+
+    public Task<Content?> AddGenres(Guid id, IEnumerable<string> genres)
+    {
+        var existingContent = _database.Read(id);
+
+        if (existingContent.Result is null)
+            return existingContent;
+
+        var existingGenres = existingContent.Result.GenreList ?? Array.Empty<string>();
+
+        List<string> genresToUpdate = [.. existingGenres, .. genres];
+
+        var dto = new ContentDto(genresToUpdate.Distinct(StringComparer.CurrentCultureIgnoreCase));
+
+        return _database.Update(id, dto);
+    }
+
+    public Task<Content?> RemoveGenres(Guid id, IEnumerable<string> genres)
+    {
+        var existingContent = _database.Read(id);
+
+        if (existingContent.Result is null || existingContent.Result.GenreList is null)
+            return existingContent;
+
+        List<string> genresToRemove = [.. existingContent.Result.GenreList ?? Array.Empty<string>()];
+
+        genresToRemove.RemoveAll(x => genres.Contains(x, StringComparer.CurrentCultureIgnoreCase));
+
+        return _database.Update(id, new ContentDto(genresToRemove));
+    }
 }
