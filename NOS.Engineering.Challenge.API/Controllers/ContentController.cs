@@ -1,7 +1,10 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
+using NOS.Engineering.Challenge.API.Filter;
 using NOS.Engineering.Challenge.API.Models;
+using NOS.Engineering.Challenge.Cache;
 using NOS.Engineering.Challenge.Managers;
+using NOS.Engineering.Challenge.Models;
 
 namespace NOS.Engineering.Challenge.API.Controllers;
 
@@ -9,13 +12,16 @@ namespace NOS.Engineering.Challenge.API.Controllers;
 [ApiController]
 public class ContentController : Controller
 {
+    private readonly ICacheService _cache;
     private readonly IContentsManager _manager;
-    public ContentController(IContentsManager manager)
+    public ContentController(ICacheService cache, IContentsManager manager)
     {
+        _cache = cache;
         _manager = manager;
     }
-    
+
     [HttpGet]
+    [Obsolete]
     public async Task<IActionResult> GetManyContents()
     {
         var contents = await _manager.GetManyContents().ConfigureAwait(false);
@@ -26,15 +32,28 @@ public class ContentController : Controller
         return Ok(contents);
     }
 
+    [HttpGet("filtered")]
+    public async Task<IActionResult> GetContents(
+        [FromQuery] ContentQueryParams parameters
+        )
+    {
+        var contents = await _manager.GetManyContents().ConfigureAwait(false);
+
+        if (!contents.Any())
+            return NotFound();
+
+        return Ok(contents);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetContent(Guid id)
     {
-        var content = await _manager.GetContent(id).ConfigureAwait(false);
+        var cachedContent = await _cache.GetOrSetAsync<Content?>(id, () => _manager.GetContent(id));
 
-        if (content == null)
+        if (cachedContent == null)
             return NotFound();
         
-        return Ok(content);
+        return Ok(cachedContent);
     }
     
     [HttpPost]
@@ -44,7 +63,12 @@ public class ContentController : Controller
     {
         var createdContent = await _manager.CreateContent(content.ToDto()).ConfigureAwait(false);
 
-        return createdContent == null ? Problem() : Ok(createdContent);
+        if (createdContent is null)
+            return Problem();
+
+        await _cache.SetAsync(createdContent.Id, createdContent).ConfigureAwait(false);
+        
+        return Ok(createdContent);
     }
     
     [HttpPatch("{id}")]
@@ -55,7 +79,12 @@ public class ContentController : Controller
     {
         var updatedContent = await _manager.UpdateContent(id, content.ToDto()).ConfigureAwait(false);
 
-        return updatedContent == null ? NotFound() : Ok(updatedContent);
+        if(updatedContent is null)
+            return Problem();
+
+        await _cache.SetAsync(id, updatedContent).ConfigureAwait(false);
+
+        return Ok(updatedContent);
     }
     
     [HttpDelete("{id}")]
@@ -64,6 +93,12 @@ public class ContentController : Controller
     )
     {
         var deletedId = await _manager.DeleteContent(id).ConfigureAwait(false);
+        
+        if(deletedId == Guid.Empty)
+            return Problem();
+
+        await _cache.RemoveAsync(id).ConfigureAwait(false); 
+
         return Ok(deletedId);
     }
     
@@ -75,7 +110,12 @@ public class ContentController : Controller
     {
         var updateContent = await _manager.AddGenres(id, genre).ConfigureAwait(false);
 
-        return updateContent == null ? NotFound() : Ok(updateContent);
+        if(updateContent is null)
+            return Problem();
+
+        await _cache.SetAsync(id, updateContent).ConfigureAwait(false);
+
+        return Ok(updateContent);
     }
     
     [HttpDelete("{id}/genre")]
@@ -84,8 +124,13 @@ public class ContentController : Controller
         [FromBody] IEnumerable<string> genre
     )
     {
-        var removedContent = await _manager.RemoveGenres(id, genre).ConfigureAwait(false);
+        var updateContent = await _manager.RemoveGenres(id, genre).ConfigureAwait(false);
 
-        return removedContent == null ? NotFound() : Ok(removedContent);
+        if (updateContent is null)
+            return Problem();
+
+        await _cache.SetAsync(id, updateContent).ConfigureAwait(false);
+
+        return Ok(updateContent);
     }
 }
