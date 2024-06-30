@@ -17,7 +17,7 @@ public class MockData : IMockData<Content>
             int duration = 120 + i;
             DateTime startTime = DateTime.Now.AddDays(i);
             DateTime endTime = DateTime.Now.AddDays(i).AddHours(2);
-            List<string> genres = GetRandomGenres();
+            List<string> genres = GetRandomGenres().Distinct().ToList();
 
             mockContents.Add(id, new Content(id, title, subTitle, description, imageUrl, duration, startTime, endTime, genres));
         }
