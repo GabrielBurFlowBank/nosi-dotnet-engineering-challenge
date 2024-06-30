@@ -1,6 +1,10 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using NOS.Engineering.Challenge.Cache;
+using NOS.Engineering.Challenge.Context;
 using NOS.Engineering.Challenge.Database;
 using NOS.Engineering.Challenge.Managers;
 using NOS.Engineering.Challenge.Models;
@@ -27,10 +31,25 @@ public static class WebApplicationBuilderExtensions
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "Nos Challenge Api", Version = "v1" });
         });
 
+        serviceCollection.AddMemoryCache();
+
         serviceCollection
+            .RegisterCacheService()
+            //.RegisterFastDatabase()
             .RegisterSlowDatabase()
             .RegisterContentsManager();
         return webApplicationBuilder;
+    }
+
+    private static IServiceCollection RegisterFastDatabase(this IServiceCollection services)
+    {
+        services.AddDbContext<EFSQLServerContext>(
+            options => options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=master;Trusted_Connection=True;"));
+
+        services.AddScoped<IDatabase<Content, ContentDto>, FastDatabase<Content, ContentDto>>();
+        services.AddScoped<IMapper<Content, ContentDto>, ContentMapper>();
+        
+        return services;
     }
 
     private static IServiceCollection RegisterSlowDatabase(this IServiceCollection services)
@@ -44,7 +63,14 @@ public static class WebApplicationBuilderExtensions
     
     private static IServiceCollection RegisterContentsManager(this IServiceCollection services)
     {
-        services.AddSingleton<IContentsManager, ContentsManager>();
+        services.AddScoped<IContentsManager, ContentsManager>();
+
+        return services;
+    }
+
+    private static IServiceCollection RegisterCacheService(this IServiceCollection services)
+    {
+        services.AddScoped<ICacheService, InMemoryCacheService>();
 
         return services;
     }
@@ -54,7 +80,7 @@ public static class WebApplicationBuilderExtensions
     {
         webApplicationBuilder
             .WebHost
-            .ConfigureLogging(logging => { logging.ClearProviders(); });
+            .ConfigureLogging(logging => { /*logging.ClearProviders(); */ });
 
         return webApplicationBuilder;
     }
