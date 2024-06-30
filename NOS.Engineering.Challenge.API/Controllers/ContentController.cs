@@ -37,18 +37,20 @@ public class ContentController : Controller
         [FromQuery] ContentQueryParams parameters
         )
     {
-        var contents = await _manager.GetManyContents().ConfigureAwait(false);
+        var queryValue = Request.QueryString.Value;
 
-        if (!contents.Any())
+        var cachedContent = await _cache.GetOrSetAsync<IEnumerable<Content?>>(queryValue, () => _manager.GetFilteredContents(parameters.Title, parameters.Genre));
+
+        if (!cachedContent.Any())
             return NotFound();
 
-        return Ok(contents);
+        return Ok(cachedContent);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetContent(Guid id)
     {
-        var cachedContent = await _cache.GetOrSetAsync<Content?>(id, () => _manager.GetContent(id));
+        var cachedContent = await _cache.GetOrSetAsync<Content?>(id.ToString(), () => _manager.GetContent(id));
 
         if (cachedContent == null)
             return NotFound();

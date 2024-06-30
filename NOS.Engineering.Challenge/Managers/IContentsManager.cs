@@ -4,7 +4,9 @@ namespace NOS.Engineering.Challenge.Managers;
 
 public interface IContentsManager
 {
+    [Obsolete]
     Task<IEnumerable<Content?>> GetManyContents();
+    Task<IEnumerable<Content?>> GetFilteredContents(string? title, string? genre);
     Task<Content?> CreateContent(ContentDto content);
     Task<Content?> GetContent(Guid id);
     Task<Content?> UpdateContent(Guid id, ContentDto content);

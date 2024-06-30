@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Tokens;
 using NOS.Engineering.Challenge.Database;
 using NOS.Engineering.Challenge.Models;
 
@@ -12,9 +13,26 @@ public class ContentsManager : IContentsManager
         _database = database;
     }
 
+    [Obsolete]
     public Task<IEnumerable<Content?>> GetManyContents()
     {
         return _database.ReadAll();
+    }
+
+    public async Task<IEnumerable<Content?>> GetFilteredContents(string? title, string? genre)
+    {
+        var allContents = await _database.ReadAll().ConfigureAwait(false);
+
+        if (allContents.IsNullOrEmpty())
+            return Enumerable.Empty<Content?>();
+
+        if (!string.IsNullOrWhiteSpace(title))
+            allContents = allContents.Where(x => x.Title.Contains(title, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(genre))
+            allContents = allContents.Where(x => x.GenreList.Any(y => y.Equals(genre, StringComparison.OrdinalIgnoreCase)));
+
+        return allContents;
     }
 
     public Task<Content?> CreateContent(ContentDto content)
@@ -36,7 +54,6 @@ public class ContentsManager : IContentsManager
     {
         return _database.Delete(id);
     }
-
 
     public Task<Content?> AddGenres(Guid id, IEnumerable<string> genres)
     {
@@ -67,4 +84,5 @@ public class ContentsManager : IContentsManager
 
         return _database.Update(id, new ContentDto(genresToRemove));
     }
+
 }
