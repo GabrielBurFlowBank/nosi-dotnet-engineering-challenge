@@ -5,7 +5,7 @@ namespace NOS.Engineering.Challenge.Cache;
 
 public class InMemoryCacheService(IMemoryCache _cache) : ICacheService
 {
-    public async Task<T> GetOrSetAsync<T>(Guid key, Func<Task<T>> dataFunc, TimeSpan? slidingExpiration = null)
+    public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> dataFunc, TimeSpan? slidingExpiration = null)
     {
         if(!_cache.TryGetValue(key, out T cachedData))
         {
