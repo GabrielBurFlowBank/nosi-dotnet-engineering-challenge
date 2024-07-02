@@ -3,8 +3,9 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace NOS.Engineering.Challenge.Cache;
 
-public class InMemoryCacheService(IMemoryCache _cache) : ICacheService
+public class InMemoryCacheService(IMemoryCache cache) : ICacheService
 {
+    private readonly IMemoryCache _cache = cache;
     public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> dataFunc, TimeSpan? slidingExpiration = null)
     {
         if(!_cache.TryGetValue(key, out T cachedData))
