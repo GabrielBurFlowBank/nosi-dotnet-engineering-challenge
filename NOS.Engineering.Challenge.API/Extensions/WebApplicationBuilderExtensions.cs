@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using NOS.Engineering.Challenge.Cache;
 using NOS.Engineering.Challenge.Context;
@@ -38,13 +37,14 @@ public static class WebApplicationBuilderExtensions
             //.RegisterFastDatabase()
             .RegisterSlowDatabase()
             .RegisterContentsManager();
+
         return webApplicationBuilder;
     }
 
     private static IServiceCollection RegisterFastDatabase(this IServiceCollection services)
     {
-        services.AddDbContext<EFSQLServerContext>(
-            options => options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=master;Trusted_Connection=True;"));
+        //services.AddDbContext<EFSQLServerContext>(
+        //    options => options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=master;Trusted_Connection=True;"));
 
         services.AddScoped<IDatabase<Content, ContentDto>, FastDatabase<Content, ContentDto>>();
         services.AddScoped<IMapper<Content, ContentDto>, ContentMapper>();
@@ -80,7 +80,7 @@ public static class WebApplicationBuilderExtensions
     {
         webApplicationBuilder
             .WebHost
-            .ConfigureLogging(logging => { /*logging.ClearProviders(); */ });
+            .ConfigureLogging(logging => { /*logging.ClearProviders(); */ logging.AddConsole(); });
 
         return webApplicationBuilder;
     }

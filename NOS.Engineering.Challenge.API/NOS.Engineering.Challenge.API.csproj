@@ -7,10 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\NOS.Engineering.Challenge.ServiceDefaults\NOS.Engineering.Challenge.ServiceDefaults.csproj" />
       <ProjectReference Include="..\NOS.Engineering.Challenge\NOS.Engineering.Challenge.csproj" />
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.2" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     </ItemGroup>
 

@@ -1,4 +1,3 @@
-using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using NOS.Engineering.Challenge.API.Filter;
 using NOS.Engineering.Challenge.API.Models;
@@ -37,7 +36,7 @@ public class ContentController : Controller
         [FromQuery] ContentQueryParams parameters
         )
     {
-        var queryValue = Request.QueryString.Value;
+        var queryValue = Request.QueryString.Value ?? string.Empty;
 
         var cachedContent = await _cache.GetOrSetAsync<IEnumerable<Content?>>(queryValue, () => _manager.GetFilteredContents(parameters.Title, parameters.Genre));
 
