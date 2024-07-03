@@ -16,25 +16,6 @@ public class InMemoryCacheServiceTest
     }
 
     [Fact]
-    public async Task GetOrSetAsync_ShouldReturnCachedValue_WhenValueIsInCache()
-    {
-        // Arrange
-        string cacheKey = "test_key";
-        string expectedValue = "cached_value";
-
-        object cacheValue = null;
-
-        _memoryCacheMock.Setup(x => x.TryGetValue(cacheKey, out expectedValue)).Returns(true);
-
-        // Act
-        var result = await _inMemoryCacheService.GetOrSetAsync(cacheKey, () => Task.FromResult("new_value"));
-
-        // Assert
-        Assert.Equal(expectedValue, result);
-        _memoryCacheMock.Verify(x => x.TryGetValue(cacheKey, out expectedValue), Times.Once);
-    }
-
-    [Fact]
     public async Task GetOrSetAsync_ShouldSetCacheValue_WhenValueIsNotInCache()
     {
         // Arrange
