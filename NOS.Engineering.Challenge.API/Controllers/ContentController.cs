@@ -81,7 +81,7 @@ public class ContentController : Controller
         var updatedContent = await _manager.UpdateContent(id, content.ToDto()).ConfigureAwait(false);
 
         if(updatedContent is null)
-            return Problem();
+            return NotFound();
 
         await _cache.SetAsync(id, updatedContent).ConfigureAwait(false);
 
@@ -96,7 +96,7 @@ public class ContentController : Controller
         var deletedId = await _manager.DeleteContent(id).ConfigureAwait(false);
         
         if(deletedId == Guid.Empty)
-            return Problem();
+            return NotFound();
 
         await _cache.RemoveAsync(id).ConfigureAwait(false); 
 
